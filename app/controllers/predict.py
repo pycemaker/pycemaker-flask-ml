@@ -1,6 +1,5 @@
 import datetime
 import json
-from pyexpat import model
 from flask import Response, jsonify
 from flask_restful import Resource
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -24,17 +23,18 @@ scheduler.start()
 pcm_predict = PcmPredict()
 
 
-def call():
-    response = requests.get("http://localhost:8080/train_model")
+def call(time_range):
+    response = requests.get("%s/train_model/%s" %
+                            (os.environ.get("ML_URL"), time_range))
     response = response.json()
     print(response["msg"])
 
 
 class RegisterModelTraining(Resource):
 
-    def get(self) -> Response:
+    def get(self, time_range) -> Response:
         job = scheduler.add_job(call, 'interval',
-                                seconds=5, id="pycemaker-model")
+                                hours=int(time_range), next_run_time=datetime.datetime.now(), id="pycemaker-model", args=[time_range])
         return jsonify("job details: %s" % (job))
 
 
@@ -47,12 +47,12 @@ class RemoveJob(Resource):
 
 class DoModelTraining(Resource):
 
-    def get(self) -> Response:
+    def get(self, time_range) -> Response:
         end_date = datetime.datetime.now()
         end_date = end_date + datetime.timedelta(hours=int(3))
         end_date = end_date.replace(second=0)
         end_date = end_date.replace(minute=0)
-        start_date = end_date - datetime.timedelta(hours=int(3))
+        start_date = end_date - datetime.timedelta(hours=int(time_range))
         start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
         end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -63,13 +63,13 @@ class DoModelTraining(Resource):
 
 class ReturnPredictedData(Resource):
 
-    def get(self) -> Response:
+    def get(self, time_range) -> Response:
 
         start_date = datetime.datetime.now()
         start_date = start_date.replace(second=0)
         start_date = start_date.replace(minute=0)
         start_date = start_date + datetime.timedelta(hours=int(3))
-        end_date = start_date + datetime.timedelta(hours=int(3))
+        end_date = start_date + datetime.timedelta(hours=int(time_range))
         start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
         end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -83,8 +83,10 @@ class ReturnPredictedData(Resource):
 
 class ReturnHealth(Resource):
 
-    def get(self) -> Response:
-        tempo_atual, tempo_previsao_atual, tempo_restante = pcm_predict.exec_current_health()
+    def get(self, time_range) -> Response:
+        print(time_range)
+        tempo_atual, tempo_previsao_atual, tempo_restante = pcm_predict.exec_current_health(
+            time_range)
         return jsonify({
             "current_health": tempo_atual,
             "predicted_current_health": tempo_previsao_atual,

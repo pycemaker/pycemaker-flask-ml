@@ -268,7 +268,7 @@ class PcmPredict:
 
         except:
 
-            print("A saúde do sistema estará acima de 30% pelas próximas 3 horas")
+            print("A saúde do sistema estará acima de 30% pelas próximas horas")
 
             return 0
 
@@ -305,12 +305,12 @@ class PcmPredict:
 
         return current_health
 
-    def exec_current_health(self):
+    def exec_current_health(self, time_range):
 
         start_date = datetime.datetime.now()
         start_date = start_date + datetime.timedelta(hours=int(3))
         start_date = start_date + datetime.timedelta(minutes=int(1))
-        end_date = start_date + datetime.timedelta(hours=int(3))
+        end_date = start_date + datetime.timedelta(hours=int(time_range))
         start_date = start_date.replace(second=0)
         end_date = end_date.replace(second=0)
         start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
