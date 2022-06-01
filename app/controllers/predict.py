@@ -81,6 +81,25 @@ class ReturnPredictedData(Resource):
         return jsonify({"remaining_time": tempo_restante, "data": data['data']})
 
 
+class ReturnHealthData(Resource):
+
+    def get(self, time_range) -> Response:
+        end_date = datetime.datetime.now()
+        end_date = end_date + datetime.timedelta(hours=int(3))
+        end_date = end_date.replace(second=0)
+        end_date = end_date.replace(minute=0)
+        start_date = end_date - datetime.timedelta(hours=int(time_range))
+        start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
+        end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
+
+        data = pcm_predict.get_data_for_train(start_date, end_date)
+        # data = pd.DataFrame(data)
+        data = data.to_json(orient="table")
+        data = json.loads(data)
+
+        return jsonify({"data": data['data']})
+
+
 class ReturnHealth(Resource):
 
     def get(self, time_range) -> Response:
