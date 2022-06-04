@@ -95,7 +95,7 @@ class ReturnHealthData(Resource):
         start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
         end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
 
-        data = pcm_predict.get_data_for_train(start_date, end_date)
+        data = pcm_predict.get_data(start_date, end_date)#getting dataset for training
         # data = pd.DataFrame(data)
         data = data.to_json(orient="table")
         data = json.loads(data)
