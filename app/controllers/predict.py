@@ -8,8 +8,11 @@ from pymongo import MongoClient
 import requests
 import os
 import pandas as pd
+from dotenv import load_dotenv
 
-from app.services.pycemaker import PcmPredict
+load_dotenv('.env')
+
+from app.services.pycemaker2 import PcmPredict
 
 mongo = MongoClient(os.environ.get("MONGO_DB_URL"))
 

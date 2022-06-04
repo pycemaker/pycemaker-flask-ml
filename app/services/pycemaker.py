@@ -12,8 +12,8 @@ import numpy as np
 import datetime as dt
 import time
 
-from pylab import rcParams
-rcParams['figure.figsize'] = 18, 8
+#from pylab import rcParams
+#rcParams['figure.figsize'] = 18, 8
 # plt.style.use('fivethirtyeight')
 
 
