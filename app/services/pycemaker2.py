@@ -163,7 +163,7 @@ class PcmPredict:
         end_date = end_date.replace(second=0)
         end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
 
-        pred = self.get_predict(start_date, end_date)
+        pred, tempo_restante = self.get_predict(start_date, end_date)
 
         y_forecasted = pred.predicted_mean
         y_truth = teste.squeeze()
