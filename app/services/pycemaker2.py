@@ -119,7 +119,7 @@ class PcmPredict:
         df_final['cpu_usage'] = [self.cpu_flag(x) for x in df_final['cpu_usage']]
         df_final['memory_usage'] = [self.ram_flag(x) for x in df_final['memory_usage']]
         df_final['response_time'] = [self.res_flag(x) for x in df_final['response_time']]
-        df_final['request_count'] = self.df_final["success_request_count"] + df_final["fail_request_count"]
+        df_final['request_count'] = df_final["success_request_count"] + df_final["fail_request_count"]
         df_final['request_count'] = [self.req_flag(x) for x in df_final['request_count']]
 
         #### Flag data
