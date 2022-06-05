@@ -3,6 +3,6 @@ services:
   web:
     build: .
     ports:
-      - "6000:5000"
+      - "9000:9000"
     env_file:
       - .env
