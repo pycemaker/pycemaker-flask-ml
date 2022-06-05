@@ -2,7 +2,7 @@
 
 ### BUSINESS UNDERSTADING
 
-O cliente necessita de um sistema que informe a saúde do sistema e tempo restante até que a saúde do sistema atinge o valor de falha. Para essa necessidade será desenvolvido um sistema de ML que irá pontuar a saúde do sistema e prever a próxima falha.
+O cliente necessita de uma solução que informe a saúde do sistema e o tempo restante até uma possível falha. Para essa necessidade será desenvolvido um sistema de ML que irá pontuar a saúde do sistema e prever a próxima falha.
 
 ### DATA UNDERSTANDING
 
@@ -22,7 +22,7 @@ Alguns métricas relevantes da aplicação Pycemaker Prometheus:
 
 ### DATA PREPARATION
 
-Para que o ML seja desenvolvido será necessário coletar as métricas do Prometheus. Adotou-se como configuração para esse projeto, coletar a cada 5 segundos alguns desses dados e salvá-los em um banco NoSQL (MongoDB), onde cada collection será a métrica de um recurso observado. Para isso utilizou-se a aplicação NiFi e Python rodando em Flask com a Biblioteca APScheduler como agendador de tarefas. O NiFi coleta e salva as métricas de recursos em collections separadas, e a aplicação Flask coleta todas as métricas e salva na collection observed_features. Além disso, para que faça sentido analisar uma série temporal, desenvolveu-se uma aplicação em Python com a biblioteca Locust que acessa continuadamente a aplicação Pycemaker Form Server com um padrão de execução, ou seja, a cada uma hora a aplicação emula a concorrência escalar de 10 a 1000 usuários e de 1000 a 10 usuários, formando uma curva que se repete ao longo do tempo. Abaixo detalha-se os dados coletados e as respectivas collections.  
+Para que o ML seja desenvolvido será necessário coletar as métricas do Prometheus. Adotou-se como configuração para esse projeto, coletar a cada 5 segundos alguns desses dados e salvá-los em um banco NoSQL (MongoDB), onde cada collection será a métrica de um recurso observado. Para isso utilizou-se a aplicação NiFi que coleta e salva as métricas de recursos em collections separadas. Além disso, para que faça sentido analisar uma série temporal, desenvolveu-se uma aplicação em Python com a biblioteca Locust que acessa continuadamente a aplicação Pycemaker Form Server com um padrão de execução, ou seja, a cada uma hora a aplicação emula a concorrência escalar de 10 a 1000 usuários e de 1000 a 10 usuários, formando uma curva que se repete ao longo do tempo. Abaixo detalha-se os dados coletados e as respectivas collections.  
 
 Recursos que foram coletadas:  
  - **Uso de CPU (cpu_usage):** process_cpu_usage
@@ -73,24 +73,13 @@ response_time: {
 }
 ```
 
-```javascript
-observed_features: {
-  date: datetime da coleta
-  cpu_usage: valor de uso da CPU
-  memory_usage: valor de uso da RAM
-  response_time: valor do tempo de resposta das requisições
-  success_request_count: valor da contagem de requisições bem-sucedidas
-  fail_request_count: valor da contagem de requisições que falharam
-}
-```
-
 ### MODELING & EVALUATION
 
 O documento *.ipynb descreve a modelagem do ML e sua avaliação.
 
 ### DEPLOYMENT
 
-A implantação do ML será feita em aplicação Python com Flask como microserviço, o agendador de tarefas APScheduler fará o treinamento do ML a cada 3 horas e três rotas estarão disponíveis:  
-1. Rota que devolve os dados de previsão para um intervalo solicitado
-2. Rota que devolve o dado atual de saúde do sistema e o dado de previsão de saúde do sistema para o tempo atual
-3. Rota que calcula a ocorrência do próximo evento de falha
+A implantação do ML será feita em aplicação Python com Flask como microserviço, o agendador de tarefas APScheduler fará o treinamento do ML a cada 3 horas e as seguintes rotas estarão disponíveis:  
+1. Rota que devolve os dados de saúde para um intervalo solicitado
+2. Rota que devolve os dados de previsão para um intervalo solicitado
+3. Rota que devolve o dado atual de saúde do sistema, o dado de previsão de saúde do sistema para o tempo atual e o tempo restante até o próximo evento de falha
