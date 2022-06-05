@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv('.env')
 
-from app.services.pycemaker2 import PcmPredict
+from app.services.pycemaker import PcmPredict
 
 mongo = MongoClient(os.environ.get("MONGO_DB_URL"))
 
