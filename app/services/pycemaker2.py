@@ -10,10 +10,11 @@ import time
 warnings.filterwarnings("ignore")
 
 class PcmPredict:
-
+    """Modelo de Machine Learning para previsão de saúde do servidor a partir de séries temporais do consumo do ambiente
+    """
     def __init__(self):
-
-        self.y = ""
+        """Modelo de Machine Learning para previsão de saúde do servidor a partir de séries temporais do consumo do ambiente
+        """
 
         self.client = MongoClient(
             "mongodb+srv://pycemaker:hlB0VK8dui1pui0p@pycemaker.rbp9n.mongodb.net/pycemaker?retryWrites=true&w=majority")
@@ -25,6 +26,14 @@ class PcmPredict:
         self.collection_response_time = self.db['response_time']
 
     def cpu_flag(self, value):
+        """Classifica o dado de consumo da CPU
+
+        Args:
+            value (float): Valor do consumo
+
+        Returns:
+            int: Flag de consumo
+        """
         if value*100 <= 25:
             return 0
         if value*100 <= 50:
@@ -34,6 +43,14 @@ class PcmPredict:
         return 3
 
     def ram_flag(self, value):
+        """Classifica o dado de consumo da Memória
+
+        Args:
+            value (float): Valor do consumo
+
+        Returns:
+            int: Flag de consumo
+        """
         if value*100 <= 25:
             return 0
         if value*100 <= 50:
@@ -43,6 +60,14 @@ class PcmPredict:
         return 3
 
     def res_flag(self, value):
+        """Classifica o dado de tempo de resposta das requisições
+
+        Args:
+            value (float): Valor do consumo
+
+        Returns:
+            int: Flag de consumo
+        """
         if value <= 0.3:
             return 0
         if value <= 0.6:
@@ -52,6 +77,14 @@ class PcmPredict:
         return 3
 
     def req_flag(self, value):
+        """Classifica o dado de número de requisições
+
+        Args:
+            value (float): Valor do consumo
+
+        Returns:
+            int: Flag de consumo
+        """
         if value <= 15:
             return 0
         if value <= 30:
@@ -61,15 +94,17 @@ class PcmPredict:
         return 3
 
     def get_data(self, start_date, end_date):
-        """
-        Function to get data from mongoDB collections
+        """Busca do banco os dados de consumo do ambiente dentro de um intervalo de tempo;
+           Classifica os dados como low(0), medium(1), high(2) e critical(4);
+           Obtém a média de cada intervalo de 1 minuto nas séries temporais; e
+           Unifica as origens em um unico DataFrame final.
 
-        parameters:
-            start_date=
-            end_date=
+        Args:
+            start_date (String): Início do intervalo
+            end_date (String): Fim do intervalo
 
-        returns:
-
+        Returns:
+            Pandas DataFrame: DataFrame final com as origens tratadas e unificadas.
         """
         print("Coletando dados para treino")
         start = datetime.datetime.strptime(
@@ -121,9 +156,17 @@ class PcmPredict:
         return y
 
     def get_model(self, start_date, end_date):
+        """Cria o modelo de Machine Learning para a previsão da saúde do sistema
 
+        Args:
+            start_date (String): Início do intervalo
+            end_date (String): Fim do intervalo
+
+        Returns:
+            Machine Learning Model: Modelo de previsão da saúde do sistema
+        """
         print("==========================================================================")
-
+        ## dividir o dataset de treino e o dataset de teste
         y = self.get_data(start_date, end_date)#getting dataset for training
 
         start_date = datetime.datetime.strptime(
@@ -145,6 +188,7 @@ class PcmPredict:
 
         self.model = results
 
+        #getting MSE RMSE
         start_date = datetime.datetime.strptime(
             start_date, '%Y-%m-%d %H:%M:%S')
         start_date = start_date.replace(second=0)
@@ -170,7 +214,16 @@ class PcmPredict:
         return results
 
     def get_predict(self, start_date, end_date):
+        """Gera previsão para uma nova série temporal
 
+        Args:
+            start_date (String): Início do intervalo
+            end_date (String): Fim do intervalo
+
+        Returns:
+            PredictionResults instance: Objeto com os resultados da previsão
+            int: Tempo em segundos até a próxima falha
+        """
         print("Gerando previsão")
 
         pred = self.model.get_prediction(start=pd.to_datetime(
@@ -181,7 +234,16 @@ class PcmPredict:
         return pred, tempo_restante
 
     def get_time_to_event(self, date_now, pred):
+        """Busca o próximo evento em que a previsão é igual ou menor 30%
 
+        Args:
+            date_now (String): Data e hora atual
+            pred (PredictionResults instance): Objeto com os resultados da previsão
+
+        Returns:
+            int: Tempo restante em segundos até a próxima falha
+
+        """
         print("Calculando tempo até o evento")
 
         try:
@@ -201,6 +263,12 @@ class PcmPredict:
             return 0
 
     def countdown(self, t, tempo_restante):
+        """Função de testes para obetenção de contagem regressiva a partir de um timestamp
+
+        Args:
+            t (int): Contador em segundos
+            tempo_restante (timedelta): Data e hora restante da contagem
+        """
         print("Iniciando contagem até o evento")
 
         while t:
@@ -212,6 +280,13 @@ class PcmPredict:
         return
 
     def get_current_health(self):
+        """Busca o último registro de cada collection;
+           Aplica a flag de classificação de saúde do sistema; e
+           Calcula saúde atual do sistema.
+
+        Returns:
+            float: Saúde atual do sistema
+        """
         result_cpu = self.collection_cpu.find_one(sort=[('_id', -1)])
         result_memory = self.collection_jvm_memory_usage.find_one(sort=[('_id', -1)])
         result_rcount = self.collection_request_count.find_one(sort=[('_id', -1)])
@@ -230,7 +305,17 @@ class PcmPredict:
         return current_health
 
     def exec_current_health(self, time_range):
+        """Obtém a saúde atual do sistema;
+           Gera previsão para uma nova série temporal;
+        
+        Args:
+            time_range (String): Valor de intervalo entre duas datas
 
+        Returns:
+            float: Saúde atual do sistema
+            float: Previsão para saúde atual (médial para um minuto)
+            int: Tempo restante em segundos até a próxima falha
+        """
         start_date = datetime.datetime.now()
         start_date = start_date + datetime.timedelta(hours=int(3))
         start_date = start_date + datetime.timedelta(minutes=int(1))
