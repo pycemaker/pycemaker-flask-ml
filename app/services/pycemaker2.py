@@ -89,38 +89,30 @@ class PcmPredict:
 
         #### Rescale values ​​from 5 seconds to 1 minute average range values
         df_cpu['time_series'] = pd.to_datetime(df_cpu['time_series'])
+        df_cpu['cpu_usage'] = [self.cpu_flag(x) for x in df_cpu['value']]
         df_cpu = df_cpu.set_index('time_series')
         df_cpu = df_cpu.resample('T').mean()
 
         df_jvm_memory_usage['time_series'] = pd.to_datetime(df_jvm_memory_usage['time_series'])
+        df_jvm_memory_usage['memory_usage'] = [self.ram_flag(x) for x in df_jvm_memory_usage['value']]
         df_jvm_memory_usage = df_jvm_memory_usage.set_index('time_series')
         df_jvm_memory_usage = df_jvm_memory_usage.resample('T').mean()
 
         df_request_count['time_series'] = pd.to_datetime(df_request_count['time_series'])
+        request_count = df_request_count['value_success'] + df_request_count['value_fail']
+        df_request_count['request_count'] = [self.req_flag(x) for x in request_count]
         df_request_count = df_request_count.set_index('time_series')
         df_request_count = df_request_count.resample('T').mean()
 
         df_response_time['time_series'] = pd.to_datetime(df_response_time['time_series'])
+        df_response_time['response_time'] = [self.res_flag(x) for x in df_response_time['value']]
         df_response_time = df_response_time.set_index('time_series')
         df_response_time = df_response_time.resample('T').mean()
-
-        df_cpu.rename(columns={'value':'cpu_usage'}, inplace=True)
-        df_jvm_memory_usage.rename(columns={'value':'memory_usage'}, inplace=True)
-        df_response_time.rename(columns={'value':'response_time'}, inplace=True)
-        df_request_count.rename(columns={'value_success':'success_request_count'}, inplace=True)
-        df_request_count.rename(columns={'value_fail':'fail_request_count'}, inplace=True)
 
         df_final = df_cpu['cpu_usage'].to_frame()
         df_final = df_final.join(df_jvm_memory_usage['memory_usage'])
         df_final = df_final.join(df_response_time['response_time'])
-        df_final = df_final.join(df_request_count['success_request_count'])
-        df_final = df_final.join(df_request_count['fail_request_count'])
-
-        df_final['cpu_usage'] = [self.cpu_flag(x) for x in df_final['cpu_usage']]
-        df_final['memory_usage'] = [self.ram_flag(x) for x in df_final['memory_usage']]
-        df_final['response_time'] = [self.res_flag(x) for x in df_final['response_time']]
-        df_final['request_count'] = df_final["success_request_count"] + df_final["fail_request_count"]
-        df_final['request_count'] = [self.req_flag(x) for x in df_final['request_count']]
+        df_final = df_final.join(df_request_count['request_count'])
 
         #### Flag data
         df_final["health"] = 1 - ((df_final["cpu_usage"] + df_final["memory_usage"] + df_final["response_time"] + df_final["request_count"]) / 12)
