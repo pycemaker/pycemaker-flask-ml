@@ -6,6 +6,10 @@ import warnings
 import pandas as pd
 import numpy as np
 import time
+import os
+from dotenv import load_dotenv
+
+load_dotenv('.env')
 
 warnings.filterwarnings("ignore")
 
@@ -16,8 +20,7 @@ class PcmPredict:
         """Modelo de Machine Learning para previsão de saúde do servidor a partir de séries temporais do consumo do ambiente
         """
 
-        self.client = MongoClient(
-            "mongodb+srv://pycemaker:hlB0VK8dui1pui0p@pycemaker.rbp9n.mongodb.net/pycemaker?retryWrites=true&w=majority")
+        self.client = MongoClient(os.environ.get("MONGO_DB_URL"))
         self.db = self.client['pycemaker']
 
         self.collection_cpu = self.db['cpu_usage']
@@ -167,7 +170,7 @@ class PcmPredict:
         """
         print("==========================================================================")
         ## dividir o dataset de treino e o dataset de teste
-        y = self.get_data(start_date, end_date)#getting dataset for training
+        y = self.get_data(start_date, end_date) #getting dataset for training
 
         start_date = datetime.datetime.strptime(
             start_date, '%Y-%m-%d %H:%M:%S')
